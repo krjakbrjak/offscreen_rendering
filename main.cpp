@@ -1,5 +1,4 @@
 #include <QApplication>
-#include <QLabel>
 #include <QOffscreenSurface>
 #include <QOpenGLContext>
 #include <QOpenGLFramebufferObject>
@@ -66,12 +65,6 @@ int main(int argc, char **argv) {
   auto tg = QQuickRenderTarget::fromOpenGLTexture(fb.texture(), fb.size());
   window.setRenderTarget(tg);
 
-  // Label that displays the content of the custom framebuffer.
-  QLabel label;
-  label.setFixedWidth(fb.size().width());
-  label.setFixedHeight(fb.size().height());
-  label.show();
-
   QObject::connect(
       &control, &QQuickRenderControl::sceneChanged, &control,
       [&] {
@@ -81,8 +74,8 @@ int main(int argc, char **argv) {
         control.render();
         control.endFrame();
 
-        // To simplify, just display the image.
-        label.setPixmap(QPixmap::fromImage(fb.toImage()));
+        // To simplify, just save the image.
+        fb.toImage().save("output.png");
       },
       Qt::QueuedConnection);
 
