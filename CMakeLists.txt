@@ -19,3 +19,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   Qt6::Quick
   Qt6::Widgets
 )
+
+install(TARGETS ${PROJECT_NAME} DESTINATION bin)

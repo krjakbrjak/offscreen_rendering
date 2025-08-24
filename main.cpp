@@ -1,5 +1,6 @@
 #include <QApplication>
-#include <QLabel>
+#include <QCommandLineOption>
+#include <QCommandLineParser>
 #include <QOffscreenSurface>
 #include <QOpenGLContext>
 #include <QOpenGLFramebufferObject>
@@ -14,11 +15,29 @@
 #include <QSurfaceFormat>
 
 int main(int argc, char **argv) {
-  QApplication app{argc, argv};
+  QGuiApplication app(argc, argv);
 
+  QCommandLineParser parser;
+  parser.setApplicationDescription("Offscreen Qt Quick Renderer");
+  parser.addHelpOption();
+  QCommandLineOption outputOption({"o", "output"}, "Path to output image",
+                                  "output");
+  parser.addOption(outputOption);
+  parser.process(app);
+
+  QString outputPath = parser.value(outputOption);
+  if (outputPath.isEmpty()) {
+    qCritical() << "No output path specified. Use --output <path> or -o <path>";
+    return 1;
+  }
   QSurfaceFormat format;
   format.setMajorVersion(4);
   format.setMinorVersion(6);
+  if (QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGL) {
+    format.setRenderableType(QSurfaceFormat::OpenGL);
+  } else {
+    format.setRenderableType(QSurfaceFormat::OpenGLES);
+  }
 
   QOpenGLContext gl_ctx;
   gl_ctx.setFormat(format);
@@ -61,12 +80,6 @@ int main(int argc, char **argv) {
   auto tg = QQuickRenderTarget::fromOpenGLTexture(fb.texture(), fb.size());
   window.setRenderTarget(tg);
 
-  // Label that displays the content of the custom framebuffer.
-  QLabel label;
-  label.setFixedWidth(fb.size().width());
-  label.setFixedHeight(fb.size().height());
-  label.show();
-
   QObject::connect(
       &control, &QQuickRenderControl::sceneChanged, &control,
       [&] {
@@ -76,8 +89,8 @@ int main(int argc, char **argv) {
         control.render();
         control.endFrame();
 
-        // To simplify, just display the image.
-        label.setPixmap(QPixmap::fromImage(fb.toImage()));
+        // To simplify, just save the image.
+        fb.toImage().save(outputPath);
       },
       Qt::QueuedConnection);
 
