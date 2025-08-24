@@ -19,6 +19,11 @@ int main(int argc, char **argv) {
   QSurfaceFormat format;
   format.setMajorVersion(4);
   format.setMinorVersion(6);
+  if (QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGL) {
+    format.setRenderableType(QSurfaceFormat::OpenGL);
+  } else {
+    format.setRenderableType(QSurfaceFormat::OpenGLES);
+  }
 
   QOpenGLContext gl_ctx;
   gl_ctx.setFormat(format);
