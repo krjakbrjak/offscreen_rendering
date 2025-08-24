@@ -1,4 +1,6 @@
 #include <QApplication>
+#include <QCommandLineOption>
+#include <QCommandLineParser>
 #include <QOffscreenSurface>
 #include <QOpenGLContext>
 #include <QOpenGLFramebufferObject>
@@ -13,8 +15,21 @@
 #include <QSurfaceFormat>
 
 int main(int argc, char **argv) {
-  QApplication app{argc, argv};
+  QGuiApplication app(argc, argv);
 
+  QCommandLineParser parser;
+  parser.setApplicationDescription("Offscreen Qt Quick Renderer");
+  parser.addHelpOption();
+  QCommandLineOption outputOption({"o", "output"}, "Path to output image",
+                                  "output");
+  parser.addOption(outputOption);
+  parser.process(app);
+
+  QString outputPath = parser.value(outputOption);
+  if (outputPath.isEmpty()) {
+    qCritical() << "No output path specified. Use --output <path> or -o <path>";
+    return 1;
+  }
   QSurfaceFormat format;
   format.setMajorVersion(4);
   format.setMinorVersion(6);
@@ -75,7 +90,7 @@ int main(int argc, char **argv) {
         control.endFrame();
 
         // To simplify, just save the image.
-        fb.toImage().save("output.png");
+        fb.toImage().save(outputPath);
       },
       Qt::QueuedConnection);
 
